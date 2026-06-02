@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Forecast — Weather Intelligence</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M6 14a5 5 0 1 1 6.5-5.5A4 4 0 1 1 15 16H7a3 3 0 0 1-1-5.8"/>
+        </svg>
+        Forecast
+      </div>
+    </div>
+    <div class="header-right">
+      <span id="clock" class="clock">--:--</span>
+      <button id="themeToggle" class="icon-btn" title="Toggle theme">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- SEARCH -->
+  <div class="search-row">
+    <div class="search-box">
+      <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="M21 21l-4.35-4.35"/>
+      </svg>
+      <input type="text" id="cityInput" placeholder="Search city..." spellcheck="false">
+      <button id="searchBtn">Search</button>
+    </div>
+    <button id="geoBtn" class="icon-btn" title="Use my location">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7z"/>
+        <circle cx="12" cy="9" r="2.5"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <main class="main" id="mainContent">
+
+    <!-- LOADING SKELETON -->
+    <div class="skeleton" id="skeleton">
+      <div class="sk-card"><div class="sk-line w-60"></div><div class="sk-line w-80 h-64"></div><div class="sk-line w-40"></div></div>
+      <div class="sk-card"><div class="sk-line w-50"></div><div class="sk-line w-90 h-48"></div></div>
+      <div class="sk-card"><div class="sk-line w-40"></div><div class="sk-grid"><div class="sk-line w-30"></div><div class="sk-line w-30"></div><div class="sk-line w-30"></div><div class="sk-line w-30"></div></div></div>
+    </div>
+
+    <!-- CURRENT WEATHER -->
+    <section class="section current-section" id="currentSection">
+      <div class="current-main">
+        <p class="location" id="location">--</p>
+        <div class="temp-group">
+          <span class="temp" id="temp">--</span>
+          <span class="temp-unit">°C</span>
+        </div>
+        <p class="condition" id="condition">---</p>
+        <p class="feels-like" id="feelsLike">Feels like --°C</p>
+      </div>
+      <div class="current-meta" id="currentMeta">
+        <div class="meta-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg>
+          <span class="meta-label">Wind</span>
+          <span class="meta-value" id="wind">-- km/h</span>
+        </div>
+        <div class="meta-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+          <span class="meta-label">Humidity</span>
+          <span class="meta-value" id="humidity">--%</span>
+        </div>
+        <div class="meta-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M2 12h20"/></svg>
+          <span class="meta-label">UV</span>
+          <span class="meta-value" id="uv">--</span>
+        </div>
+        <div class="meta-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <span class="meta-label">Pressure</span>
+          <span class="meta-value" id="pressure">-- mb</span>
+        </div>
+        <div class="meta-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span class="meta-label">Visibility</span>
+          <span class="meta-value" id="visibility">-- km</span>
+        </div>
+        <div class="meta-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20z"/><path d="M12 6v6l4 2"/></svg>
+          <span class="meta-label">Rain</span>
+          <span class="meta-value" id="rain">-- mm</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOURLY CHART -->
+    <section class="section chart-section" id="chartSection">
+      <div class="section-header">
+        <h3>Hourly Forecast</h3>
+        <span class="section-sub" id="chartDate">Today</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="hourlyChart"></canvas>
+      </div>
+    </section>
+
+    <!-- 4-DAY FORECAST -->
+    <section class="section forecast-section" id="forecastSection">
+      <h3>4-Day Forecast</h3>
+      <div class="forecast-grid" id="forecastGrid"></div>
+    </section>
+
+  </main>
+
+  <!-- ERROR TOAST -->
+  <div class="toast" id="toast"></div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
