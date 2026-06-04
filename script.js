@@ -90,9 +90,9 @@ async function fetchWeather(query) {
 function renderAll(data) {
   lastData = data;
   updateCurrent(data);
-  updateChart(data);
   updateForecast(data);
   setLoading(false);
+  updateChart(data);
   if (worldMap) setTimeout(() => worldMap.invalidateSize(), 150);
 }
 
@@ -147,10 +147,11 @@ function updateChart(data) {
           data: temps,
           borderColor: lineColor,
           backgroundColor: ctx => {
-            if (!ctx.chart.chartArea) return "transparent";
-            const { top, bottom } = ctx.chart.chartArea;
-            const g = ctx.chart.ctx.createLinearGradient(0, top, 0, bottom);
-            g.addColorStop(0, light ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.12)");
+            const area = ctx.chart.chartArea;
+            if (!area) return "transparent";
+            const g = ctx.chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
+            g.addColorStop(0, light ? "rgba(0,0,0,0.25)" : "rgba(255,255,255,0.25)");
+            g.addColorStop(0.6, light ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)");
             g.addColorStop(1, "transparent");
             return g;
           },
