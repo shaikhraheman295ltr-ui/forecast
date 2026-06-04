@@ -76,7 +76,7 @@ function setLoading(v) {
 async function fetchWeather(query) {
   setLoading(true);
   try {
-    const res = await fetch(`${BASE}?key=${API_KEY}&q=${query}&days=4&aqi=no&alerts=no`);
+    const res = await fetch(`${BASE}?key=${API_KEY}&q=${query}&days=3&aqi=no&alerts=no`);
     if (!res.ok) throw new Error(res.status === 400 ? "City not found" : "Request failed");
     const data = await res.json();
     renderAll(data);
@@ -256,6 +256,7 @@ function updateForecast(data) {
     div.innerHTML = `
       <div class="forecast-day">${dayName}</div>
       <div class="forecast-icon">${getIcon(day.day.condition.code)}</div>
+      <div class="forecast-cond">${day.day.condition.text}</div>
       <div class="forecast-temps">
         <span class="forecast-high">${Math.round(day.day.maxtemp_c)}°</span>
         <span class="forecast-low">${Math.round(day.day.mintemp_c)}°</span>

@@ -405,7 +405,7 @@ body.light .leaflet-tile-pane {
 /* FORECAST */
 .forecast-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 12px;
   margin-top: 12px;
 }
@@ -435,6 +435,12 @@ body.light .leaflet-tile-pane {
 .forecast-icon {
   font-size: 1.6rem;
   margin: 6px 0;
+}
+
+.forecast-cond {
+  font-size: 0.75rem;
+  color: var(--text2);
+  margin-bottom: 4px;
 }
 
 .forecast-temps {
