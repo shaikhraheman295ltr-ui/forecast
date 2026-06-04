@@ -5,6 +5,8 @@
   <title>Forecast — Weather Intelligence</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -70,6 +72,10 @@
         </div>
         <p class="condition" id="condition">---</p>
         <p class="feels-like" id="feelsLike">Feels like --°C</p>
+        <div class="astro">
+          <span>Sunrise <strong id="sunrise">--:--</strong></span>
+          <span>Sunset <strong id="sunset">--:--</strong></span>
+        </div>
       </div>
       <div class="current-meta" id="currentMeta">
         <div class="meta-item">
@@ -101,6 +107,25 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20z"/><path d="M12 6v6l4 2"/></svg>
           <span class="meta-label">Rain</span>
           <span class="meta-value" id="rain">-- mm</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- WORLD WEATHER MAP -->
+    <section class="section map-section" id="mapSection">
+      <div class="section-header">
+        <h3>World Weather</h3>
+        <span class="section-sub">Global temperatures &mdash; live</span>
+      </div>
+      <div class="map-wrap">
+        <div id="worldMap"></div>
+        <div class="map-legend">
+          <span><span class="dot" style="background:#0a0aff"></span> -10°</span>
+          <span><span class="dot" style="background:#3a7aff"></span> 0°</span>
+          <span><span class="dot" style="background:#7abaff"></span> 10°</span>
+          <span><span class="dot" style="background:#ffcc66"></span> 20°</span>
+          <span><span class="dot" style="background:#ff8833"></span> 30°</span>
+          <span><span class="dot" style="background:#ff3333"></span> 40°+</span>
         </div>
       </div>
     </section>

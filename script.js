@@ -12,6 +12,8 @@ const toast = $("toast");
 let chart = null;
 let toastTimer = null;
 let lastData = null;
+let worldMap = null;
+let mapMarkers = [];
 
 // CLOCK
 function updateClock() {
@@ -101,12 +103,21 @@ function updateCurrent(data) {
   $("temp").textContent = Math.round(c.temp_c);
   $("condition").textContent = c.condition.text;
   $("feelsLike").textContent = `Feels like ${Math.round(c.feelslike_c)}°C`;
-  $("wind").textContent = `${c.wind_kph} km/h`;
+  const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+  const windDir = dirs[Math.round(c.wind_degree / 22.5) % 16];
+  $("wind").textContent = `${c.wind_kph} km/h ${windDir}`;
   $("humidity").textContent = `${c.humidity}%`;
   $("uv").textContent = c.uv;
   $("pressure").textContent = `${c.pressure_mb} mb`;
   $("visibility").textContent = `${c.vis_km} km`;
   $("rain").textContent = `${c.precip_mm} mm`;
+
+  // Astro
+  const astro = data.forecast.forecastday[0].astro;
+  if (astro) {
+    $("sunrise").textContent = astro.sunrise;
+    $("sunset").textContent = astro.sunset;
+  }
 }
 
 function updateChart(data) {
@@ -261,5 +272,98 @@ function getIcon(code) {
   return `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 14a5 5 0 1 1 6.5-5.5A4 4 0 1 1 15 16H7a3 3 0 0 1-1-5.8"/></svg>`;
 }
 
+// ---------------- WORLD MAP ----------------
+const WORLD_CITIES = [
+  { name: "London", lat: 51.51, lon: -0.13, country: "UK" },
+  { name: "New York", lat: 40.71, lon: -74.01, country: "USA" },
+  { name: "Tokyo", lat: 35.68, lon: 139.69, country: "Japan" },
+  { name: "Sydney", lat: -33.87, lon: 151.21, country: "Australia" },
+  { name: "Moscow", lat: 55.76, lon: 37.62, country: "Russia" },
+  { name: "Dubai", lat: 25.20, lon: 55.27, country: "UAE" },
+  { name: "Singapore", lat: 1.35, lon: 103.82, country: "Singapore" },
+  { name: "Cairo", lat: 30.04, lon: 31.24, country: "Egypt" },
+  { name: "Sao Paulo", lat: -23.55, lon: -46.63, country: "Brazil" },
+  { name: "Mumbai", lat: 19.08, lon: 72.88, country: "India" },
+  { name: "Beijing", lat: 39.91, lon: 116.40, country: "China" },
+  { name: "Cape Town", lat: -33.93, lon: 18.42, country: "South Africa" },
+  { name: "Reykjavik", lat: 64.15, lon: -21.82, country: "Iceland" },
+  { name: "Buenos Aires", lat: -34.61, lon: -58.38, country: "Argentina" },
+  { name: "Los Angeles", lat: 34.05, lon: -118.24, country: "USA" },
+  { name: "Paris", lat: 48.86, lon: 2.35, country: "France" },
+  { name: "Berlin", lat: 52.52, lon: 13.41, country: "Germany" },
+  { name: "Delhi", lat: 28.61, lon: 77.23, country: "India" },
+  { name: "Shanghai", lat: 31.23, lon: 121.47, country: "China" },
+  { name: "Lagos", lat: 6.52, lon: 3.38, country: "Nigeria" },
+  { name: "Mexico City", lat: 19.43, lon: -99.13, country: "Mexico" },
+  { name: "Jakarta", lat: -6.21, lon: 106.85, country: "Indonesia" },
+];
+
+function tempColor(temp) {
+  if (temp < -10) return "#0a0aff";
+  if (temp < 0) return "#3a7aff";
+  if (temp < 10) return "#7abaff";
+  if (temp < 20) return "#ffcc66";
+  if (temp < 30) return "#ff8833";
+  if (temp < 40) return "#ff3333";
+  return "#cc0033";
+}
+
+function wmoIcon(code) {
+  if (code === 0) return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2"/></svg>`;
+  if (code <= 3) return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 14a5 5 0 1 1 6.5-5.5A4 4 0 1 1 15 16H7a3 3 0 0 1-1-5.8"/></svg>`;
+  if (code >= 61 && code <= 82) return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 13a4 4 0 0 0-8 0M12 13v7"/><path d="M12 13l-2 2M12 13l2 2"/></svg>`;
+  if (code >= 71 && code <= 77) return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 13a4 4 0 0 0-8 0"/><path d="M12 13v5"/><path d="M10 16l2-2 2 2"/></svg>`;
+  return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 14a5 5 0 1 1 6.5-5.5A4 4 0 1 1 15 16H7a3 3 0 0 1-1-5.8"/></svg>`;
+}
+
+async function renderWorldMap() {
+  if (!worldMap) {
+    worldMap = L.map("worldMap", {
+      center: [20, 0],
+      zoom: 2,
+      zoomControl: true,
+      attributionControl: false,
+    });
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      maxZoom: 6,
+      minZoom: 2,
+    }).addTo(worldMap);
+  }
+
+  mapMarkers.forEach(m => worldMap.removeLayer(m));
+  mapMarkers = [];
+
+  const fetches = WORLD_CITIES.map(city =>
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current_weather=true`)
+      .then(r => r.ok ? r.json() : null)
+      .catch(() => null)
+  );
+
+  const results = await Promise.all(fetches);
+
+  results.forEach((data, i) => {
+    if (!data || !data.current_weather) return;
+    const w = data.current_weather;
+    const city = WORLD_CITIES[i];
+    const color = tempColor(w.temperature);
+
+    const icon = L.divIcon({
+      className: "",
+      html: `<div style="width:28px;height:28px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,0.6);box-shadow:0 2px 8px rgba(0,0,0,0.4);font-size:10px;font-weight:700;color:#fff;">${Math.round(w.temperature)}°</div>`,
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
+    });
+
+    const marker = L.marker([city.lat, city.lon], { icon }).addTo(worldMap);
+    marker.bindPopup(`
+      <strong>${city.name}, ${city.country}</strong>
+      ${Math.round(w.temperature)}°C &nbsp;|&nbsp; ${wmoIcon(w.weathercode)}
+      <br><span style="font-size:0.75rem;color:var(--text3)">Wind ${w.windspeed} km/h</span>
+    `);
+    mapMarkers.push(marker);
+  });
+}
+
 // INIT
 fetchWeather("Mumbai");
+renderWorldMap();

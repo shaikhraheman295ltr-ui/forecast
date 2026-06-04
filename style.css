@@ -180,9 +180,10 @@ body {
   animation: fadeSlideUp 0.6s ease forwards;
 }
 
-.section:nth-of-type(1) { animation-delay: 0.2s; }
-.section:nth-of-type(2) { animation-delay: 0.35s; }
-.section:nth-of-type(3) { animation-delay: 0.5s; }
+.section:nth-of-type(1) { animation-delay: 0.15s; }
+.section:nth-of-type(2) { animation-delay: 0.25s; }
+.section:nth-of-type(3) { animation-delay: 0.35s; }
+.section:nth-of-type(4) { animation-delay: 0.45s; }
 
 .section-header {
   display: flex;
@@ -249,6 +250,20 @@ body {
   margin-top: 4px;
 }
 
+.astro {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+  font-size: 0.78rem;
+  color: var(--text3);
+}
+
+.astro strong {
+  color: var(--text2);
+  font-weight: 500;
+  margin-left: 2px;
+}
+
 .current-meta {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -296,6 +311,93 @@ body {
 
 .chart-section {
   padding-bottom: 16px;
+}
+
+/* WORLD MAP */
+.map-wrap {
+  position: relative;
+}
+
+#worldMap {
+  height: 280px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  z-index: 0;
+}
+
+.map-legend {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.map-legend span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.map-legend .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Leaflet overrides */
+.leaflet-container {
+  background: var(--surface) !important;
+}
+
+.leaflet-tile-pane {
+  filter: brightness(0.7) saturate(0.4) hue-rotate(0deg);
+}
+
+body.light .leaflet-tile-pane {
+  filter: brightness(0.95) saturate(0.6) hue-rotate(0deg);
+}
+
+.leaflet-control-zoom a {
+  background: var(--surface) !important;
+  color: var(--text2) !important;
+  border-color: var(--border) !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: var(--surface2) !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  box-shadow: none !important;
+  transition: background var(--transition), color var(--transition) !important;
+}
+
+.leaflet-popup-tip {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  transition: background var(--transition) !important;
+}
+
+.leaflet-popup-content {
+  margin: 10px 14px !important;
+  font-size: 0.85rem !important;
+  text-align: center;
+}
+
+.leaflet-popup-content strong {
+  display: block;
+  font-size: 1.1rem;
+  margin-bottom: 2px;
 }
 
 /* FORECAST */
@@ -471,6 +573,10 @@ body {
 
   .temp {
     font-size: 3rem;
+  }
+
+  #worldMap {
+    height: 220px;
   }
 
   .app {
