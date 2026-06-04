@@ -316,10 +316,12 @@ body {
 /* WORLD MAP */
 .map-wrap {
   position: relative;
+  min-height: 200px;
 }
 
 #worldMap {
   height: 280px;
+  width: 100%;
   border-radius: var(--radius-sm);
   overflow: hidden;
   z-index: 0;

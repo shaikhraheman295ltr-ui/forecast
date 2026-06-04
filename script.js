@@ -67,7 +67,7 @@ function showToast(msg, isError = false) {
 // LOADING
 function setLoading(v) {
   skeleton.style.display = v ? "flex" : "none";
-  document.querySelectorAll(".section:not(.skeleton)").forEach(el => {
+  document.querySelectorAll(".section:not(.skeleton):not(.map-section)").forEach(el => {
     el.style.display = v ? "none" : "";
   });
 }
@@ -93,6 +93,7 @@ function renderAll(data) {
   updateChart(data);
   updateForecast(data);
   setLoading(false);
+  if (worldMap) setTimeout(() => worldMap.invalidateSize(), 150);
 }
 
 function updateCurrent(data) {
@@ -146,7 +147,9 @@ function updateChart(data) {
           data: temps,
           borderColor: lineColor,
           backgroundColor: ctx => {
-            const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 280);
+            if (!ctx.chart.chartArea) return "transparent";
+            const { top, bottom } = ctx.chart.chartArea;
+            const g = ctx.chart.ctx.createLinearGradient(0, top, 0, bottom);
             g.addColorStop(0, light ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.12)");
             g.addColorStop(1, "transparent");
             return g;
@@ -365,5 +368,5 @@ async function renderWorldMap() {
 }
 
 // INIT
-fetchWeather("Mumbai");
 renderWorldMap();
+fetchWeather("Mumbai");
