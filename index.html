@@ -11,6 +11,8 @@
 </head>
 <body>
 
+<canvas id="particleCanvas"></canvas>
+
 <div class="app">
 
   <!-- HEADER -->
@@ -75,13 +77,16 @@
         <div class="astro">
           <span>Sunrise <strong id="sunrise">--:--</strong></span>
           <span>Sunset <strong id="sunset">--:--</strong></span>
+          <span class="moon" id="moonPhase"></span>
         </div>
+        <p class="local-time" id="localTime"></p>
       </div>
       <div class="current-meta" id="currentMeta">
         <div class="meta-item">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg>
           <span class="meta-label">Wind</span>
           <span class="meta-value" id="wind">-- km/h</span>
+          <div class="wind-compass" id="windCompass"><div class="wc-arrow"></div></div>
         </div>
         <div class="meta-item">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
@@ -92,6 +97,7 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M2 12h20"/></svg>
           <span class="meta-label">UV</span>
           <span class="meta-value" id="uv">--</span>
+          <div class="uv-bar"><div class="uv-fill" id="uvFill"></div></div>
         </div>
         <div class="meta-item">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
@@ -139,6 +145,14 @@
       <div class="chart-wrap">
         <canvas id="hourlyChart"></canvas>
       </div>
+    </section>
+
+    <!-- HOURLY STRIP -->
+    <section class="section strip-section" id="stripSection">
+      <div class="section-header">
+        <h3>Hourly Breakdown</h3>
+      </div>
+      <div class="hourly-strip" id="hourlyStrip"></div>
     </section>
 
     <!-- 4-DAY FORECAST -->

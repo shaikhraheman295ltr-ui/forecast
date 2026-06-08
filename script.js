@@ -12,8 +12,12 @@ const toast = $("toast");
 let chart = null;
 let toastTimer = null;
 let lastData = null;
+let lastTemp = null;
 let worldMap = null;
 let mapMarkers = [];
+let particles = [];
+let particleFrame = null;
+let particleType = "clear";
 
 // CLOCK
 function updateClock() {
@@ -32,6 +36,90 @@ themeToggle.onclick = () => {
   localStorage.setItem("theme", document.body.className);
   if (lastData) updateChart(lastData);
 };
+
+// ---------------- PARTICLES ----------------
+function initParticles() {
+  const canvas = $("particleCanvas");
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  window.addEventListener("resize", () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+}
+
+function spawnParticles(type) {
+  particleType = type;
+  particles = [];
+  const ctx = $("particleCanvas").getContext("2d");
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const count = type === "rain" ? 120 : type === "snow" ? 70 : type === "fog" ? 50 : 25;
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      speed: 0.3 + Math.random() * 1.8,
+      size: type === "rain" ? 0.8 + Math.random() * 1.5 : 2 + Math.random() * 4,
+      alpha: 0.08 + Math.random() * 0.2,
+      drift: Math.random() * 0.4 - 0.2,
+    });
+  }
+  if (particleFrame) cancelAnimationFrame(particleFrame);
+  animateParticles(ctx, w, h);
+}
+
+function animateParticles(ctx, w, h) {
+  ctx.clearRect(0, 0, w, h);
+  for (const p of particles) {
+    if (particleType === "rain") {
+      p.y += p.speed * 3.5;
+      p.x += p.drift;
+      if (p.y > h) { p.y = -5; p.x = Math.random() * w; }
+      ctx.beginPath();
+      ctx.strokeStyle = `rgba(255,255,255,${p.alpha})`;
+      ctx.lineWidth = p.size;
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p.x - 2, p.y - 8);
+      ctx.stroke();
+    } else if (particleType === "snow") {
+      p.y += p.speed * 0.4;
+      p.x += Math.sin(p.y * 0.02) * 0.4;
+      if (p.y > h) { p.y = -5; p.x = Math.random() * w; }
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${p.alpha})`;
+      ctx.fill();
+    } else if (particleType === "fog") {
+      p.x += p.drift * 0.2;
+      p.y += (Math.random() - 0.5) * 0.1;
+      if (p.x > w + 30) p.x = -30;
+      if (p.x < -30) p.x = w + 30;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${p.alpha * 0.3})`;
+      ctx.fill();
+    } else {
+      p.x += p.drift * 0.15;
+      p.y += (Math.random() - 0.5) * 0.05;
+      if (p.x > w + 20) p.x = -20;
+      if (p.x < -20) p.x = w + 20;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * 0.6, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${p.alpha * 0.3})`;
+      ctx.fill();
+    }
+  }
+  particleFrame = requestAnimationFrame(() => animateParticles(ctx, w, h));
+}
+
+function getParticleType(code) {
+  if ((code >= 1063 && code <= 1087) || (code >= 1150 && code <= 1201) || (code >= 1240 && code <= 1246)) return "rain";
+  if ((code >= 1204 && code <= 1237) || (code >= 1249 && code <= 1264)) return "snow";
+  if ((code >= 1135 && code <= 1147) || code === 1030) return "fog";
+  if (code === 1000) return "clear";
+  return "cloudy";
+}
 
 // SEARCH
 searchBtn.onclick = () => {
@@ -90,10 +178,27 @@ async function fetchWeather(query) {
 function renderAll(data) {
   lastData = data;
   updateCurrent(data);
+  updateHourlyStrip(data);
   updateForecast(data);
   setLoading(false);
   updateChart(data);
   if (worldMap) setTimeout(() => worldMap.invalidateSize(), 150);
+}
+
+function animateTemp(newVal) {
+  const el = $("temp");
+  const oldVal = lastTemp !== null ? lastTemp : newVal;
+  if (oldVal === newVal) { el.textContent = newVal; return; }
+  const start = performance.now();
+  const dur = 500;
+  function step(now) {
+    const t = Math.min((now - start) / dur, 1);
+    const eased = 1 - Math.pow(1 - t, 3);
+    el.textContent = Math.round(oldVal + (newVal - oldVal) * eased);
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+  lastTemp = newVal;
 }
 
 function updateCurrent(data) {
@@ -101,7 +206,7 @@ function updateCurrent(data) {
   const loc = data.location;
 
   $("location").textContent = `${loc.name}, ${loc.country}`;
-  $("temp").textContent = Math.round(c.temp_c);
+  animateTemp(Math.round(c.temp_c));
   $("condition").textContent = c.condition.text;
   $("feelsLike").textContent = `Feels like ${Math.round(c.feelslike_c)}°C`;
   const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
@@ -113,12 +218,43 @@ function updateCurrent(data) {
   $("visibility").textContent = `${c.vis_km} km`;
   $("rain").textContent = `${c.precip_mm} mm`;
 
-  // Astro
+  // UV bar
+  const uvPct = Math.min(c.uv / 11 * 100, 100);
+  $("uvFill").style.width = uvPct + "%";
+
+  // Wind compass
+  const arrow = document.querySelector("#windCompass .wc-arrow");
+  if (arrow) arrow.style.transform = `rotate(${c.wind_degree}deg)`;
+
+  // Particles
+  spawnParticles(getParticleType(c.condition.code));
+
+  // Astro + Moon + Local time
   const astro = data.forecast.forecastday[0].astro;
   if (astro) {
     $("sunrise").textContent = astro.sunrise;
     $("sunset").textContent = astro.sunset;
+    const moonEl = $("moonPhase");
+    const phase = astro.moon_phase || "";
+    if (phase) moonEl.textContent = getMoonEmoji(phase) + " " + phase;
   }
+  if (loc.localtime) {
+    const lt = loc.localtime.split(" ")[1] || "";
+    $("localTime").textContent = "Local time: " + lt;
+  }
+}
+
+function getMoonEmoji(phase) {
+  const p = phase.toLowerCase();
+  if (p.includes("new")) return "🌑";
+  if (p.includes("waxing crescent")) return "🌒";
+  if (p.includes("first quarter")) return "🌓";
+  if (p.includes("waxing gibbous")) return "🌔";
+  if (p.includes("full")) return "🌕";
+  if (p.includes("waning gibbous")) return "🌖";
+  if (p.includes("last quarter")) return "🌗";
+  if (p.includes("waning crescent")) return "🌘";
+  return "🌑";
 }
 
 function updateChart(data) {
@@ -236,6 +372,24 @@ function updateChart(data) {
         },
       },
     },
+  });
+}
+
+// ---------------- HOURLY STRIP ----------------
+function updateHourlyStrip(data) {
+  const strip = $("hourlyStrip");
+  strip.innerHTML = "";
+  const hours = data.forecast.forecastday[0].hour;
+  hours.forEach((h, i) => {
+    const div = document.createElement("div");
+    div.className = "strip-item";
+    div.style.animationDelay = `${i * 0.015}s`;
+    div.innerHTML = `
+      <span class="strip-time">${h.time.split(" ")[1]}</span>
+      <span class="strip-icon">${getIcon(h.condition.code)}</span>
+      <span class="strip-temp">${Math.round(h.temp_c)}°</span>
+    `;
+    strip.appendChild(div);
   });
 }
 
@@ -370,5 +524,6 @@ async function renderWorldMap() {
 }
 
 // INIT
+initParticles();
 renderWorldMap();
 fetchWeather("Mumbai");
