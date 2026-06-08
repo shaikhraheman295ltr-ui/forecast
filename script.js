@@ -164,7 +164,7 @@ function setLoading(v) {
 async function fetchWeather(query) {
   setLoading(true);
   try {
-    const res = await fetch(`${BASE}?key=${API_KEY}&q=${query}&days=3&aqi=no&alerts=no`);
+    const res = await fetch(`${BASE}?key=${API_KEY}&q=${query}&days=3&aqi=yes&alerts=no`);
     if (!res.ok) throw new Error(res.status === 400 ? "City not found" : "Request failed");
     const data = await res.json();
     renderAll(data);
@@ -229,7 +229,16 @@ function updateCurrent(data) {
   // Particles
   spawnParticles(getParticleType(c.condition.code));
 
-  // Astro + Moon + Local time
+  // AQI
+  if (c.air_quality) {
+    const a = c.air_quality;
+    const aqiVal = a["us-epa-index"] || 0;
+    const labels = ["", "Good", "Fair", "Moderate", "Poor", "Very Poor"];
+    $("aqi").textContent = aqiVal;
+    $("aqiLabel").textContent = labels[aqiVal] || "";
+  }
+
+  // Astro + Moon + Local time + Daylight bar
   const astro = data.forecast.forecastday[0].astro;
   if (astro) {
     $("sunrise").textContent = astro.sunrise;
@@ -237,11 +246,23 @@ function updateCurrent(data) {
     const moonEl = $("moonPhase");
     const phase = astro.moon_phase || "";
     if (phase) moonEl.textContent = getMoonEmoji(phase) + " " + phase;
+
+    const toMin = t => { const p = t.match(/\d+/g); return parseInt(p[0]) * 60 + parseInt(p[1]); };
+    const rise = toMin(astro.sunrise);
+    const set = toMin(astro.sunset);
+    const dayPct = ((set - rise) / (24 * 60)) * 100;
+    $("daylightFill").style.width = Math.max(0, Math.min(100, dayPct)) + "%";
   }
   if (loc.localtime) {
     const lt = loc.localtime.split(" ")[1] || "";
     $("localTime").textContent = "Local time: " + lt;
   }
+
+  // Weather tip
+  $("weatherTip").textContent = getWeatherTip(data);
+
+  // Favorites
+  updateFavBtn(loc.name);
 }
 
 function getMoonEmoji(phase) {
@@ -522,6 +543,80 @@ async function renderWorldMap() {
     mapMarkers.push(marker);
   });
 }
+
+// ---------------- WEATHER TIPS ----------------
+function getWeatherTip(data) {
+  const c = data.current;
+  const r = data.forecast.forecastday[0].day.daily_chance_of_rain;
+  if (c.temp_c > 40) return "Extreme heat — stay indoors, keep hydrated";
+  if (c.temp_c > 35) return "Very hot — avoid midday sun, drink water";
+  if (c.temp_c > 30) return "Hot — wear light clothing, use sunscreen";
+  if (c.temp_c < 0) return "Freezing — bundle up, watch for ice";
+  if (c.temp_c < 5) return "Cold — wear a warm jacket";
+  if (c.precip_mm > 10) return "Heavy rain — take an umbrella, avoid flooding areas";
+  if (c.precip_mm > 3) return "Rain likely — carry an umbrella";
+  if (r > 70) return "High rain chance — better take an umbrella";
+  if (r > 40) return "Rain possible — check radar before heading out";
+  if (c.wind_kph > 40) return "Strong winds — secure loose objects";
+  if (c.wind_kph > 25) return "Breezy — good day for flying kites";
+  if (c.uv > 7) return "High UV — wear SPF 30+, sunglasses";
+  if (c.uv > 5) return "Moderate UV — sunscreen recommended";
+  if (c.condition.code === 1000 && c.temp_c > 20 && c.temp_c < 28) return "Perfect weather — enjoy the outdoors!";
+  if (c.condition.code === 1000) return "Clear skies — a bright day ahead";
+  return "Moderate conditions — comfortable overall";
+}
+
+// ---------------- FAVORITES ----------------
+let favorites = JSON.parse(localStorage.getItem("favCities") || "[]");
+const favBtn = $("favBtn");
+
+function renderFavs() {
+  const row = $("favsRow");
+  row.innerHTML = "";
+  favorites.forEach(city => {
+    const chip = document.createElement("span");
+    chip.className = "fav-chip";
+    chip.textContent = city;
+    chip.onclick = () => { cityInput.value = city; fetchWeather(city); };
+    row.appendChild(chip);
+  });
+}
+
+function updateFavBtn(city) {
+  if (!city) return;
+  favBtn.classList.toggle("active", favorites.includes(city));
+}
+
+favBtn.onclick = () => {
+  const city = $("location").textContent.split(",")[0].trim();
+  if (!city) return;
+  const idx = favorites.indexOf(city);
+  if (idx > -1) favorites.splice(idx, 1); else favorites.push(city);
+  localStorage.setItem("favCities", JSON.stringify(favorites));
+  renderFavs();
+  updateFavBtn(city);
+  showToast(idx > -1 ? "Removed from favorites" : "Added to favorites");
+};
+
+renderFavs();
+
+// ---------------- AUTO-REFRESH ----------------
+let refreshTimer = null;
+function startAutoRefresh() {
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(() => {
+    if (lastData) fetchWeather(lastData.location.name);
+  }, 600000);
+}
+startAutoRefresh();
+
+// ---------------- KEYBOARD SHORTCUTS ----------------
+document.addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+  if (e.key === "s" || e.key === "S") { e.preventDefault(); cityInput.focus(); }
+  if (e.key === "g" || e.key === "G") { e.preventDefault(); geoBtn.click(); }
+  if (e.key === "l" || e.key === "L") { e.preventDefault(); themeToggle.click(); }
+});
 
 // INIT
 initParticles();

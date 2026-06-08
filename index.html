@@ -52,7 +52,13 @@
         <circle cx="12" cy="9" r="2.5"/>
       </svg>
     </button>
+    <button id="favBtn" class="icon-btn" title="Add to favorites">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/>
+      </svg>
+    </button>
   </div>
+  <div class="favs-row" id="favsRow"></div>
 
   <!-- MAIN CONTENT -->
   <main class="main" id="mainContent">
@@ -73,12 +79,14 @@
           <span class="temp-unit">°C</span>
         </div>
         <p class="condition" id="condition">---</p>
+        <p class="weather-tip" id="weatherTip"></p>
         <p class="feels-like" id="feelsLike">Feels like --°C</p>
         <div class="astro">
           <span>Sunrise <strong id="sunrise">--:--</strong></span>
           <span>Sunset <strong id="sunset">--:--</strong></span>
           <span class="moon" id="moonPhase"></span>
         </div>
+        <div class="daylight-bar"><div class="daylight-fill" id="daylightFill"></div></div>
         <p class="local-time" id="localTime"></p>
       </div>
       <div class="current-meta" id="currentMeta">
@@ -98,6 +106,12 @@
           <span class="meta-label">UV</span>
           <span class="meta-value" id="uv">--</span>
           <div class="uv-bar"><div class="uv-fill" id="uvFill"></div></div>
+        </div>
+        <div class="meta-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/></svg>
+          <span class="meta-label">AQI</span>
+          <span class="meta-value" id="aqi">--</span>
+          <span class="aqi-label" id="aqiLabel"></span>
         </div>
         <div class="meta-item">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
@@ -165,6 +179,8 @@
 
   <!-- ERROR TOAST -->
   <div class="toast" id="toast"></div>
+
+  <div class="shortcuts-hint"><kbd>S</kbd> search · <kbd>G</kbd> GPS · <kbd>L</kbd> theme</div>
 
 </div>
 
