@@ -450,14 +450,27 @@ body {
   border-bottom: 5px solid var(--text);
 }
 
-/* CHART */
-.chart-wrap {
-  position: relative;
-  min-height: 220px;
+/* CHARTS ROW */
+.charts-section {
+  padding-bottom: 16px;
 }
 
-.chart-section {
-  padding-bottom: 16px;
+.charts-row {
+  display: flex;
+  gap: 20px;
+}
+
+.chart-col {
+  flex: 1;
+  min-width: 0;
+}
+
+.chart-col .section-header {
+  margin-bottom: 10px;
+}
+
+.chart-col canvas {
+  width: 100% !important;
 }
 
 /* WORLD MAP */
@@ -795,6 +808,10 @@ body.light .leaflet-tile-pane {
 
   .current-meta {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .charts-row {
+    flex-direction: column;
   }
 
   .forecast-grid {

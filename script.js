@@ -9,7 +9,8 @@ const themeToggle = $("themeToggle");
 const skeleton = $("skeleton");
 const toast = $("toast");
 
-let chart = null;
+let barChart = null;
+let lineChart = null;
 let toastTimer = null;
 let lastData = null;
 let lastTemp = null;
@@ -34,7 +35,7 @@ if (savedTheme) document.body.className = savedTheme;
 themeToggle.onclick = () => {
   document.body.classList.toggle("light");
   localStorage.setItem("theme", document.body.className);
-  if (lastData) updateChart(lastData);
+  if (lastData) { updateChart(lastData); updateHourlyStrip(lastData); }
 };
 
 // ---------------- PARTICLES ----------------
@@ -279,25 +280,96 @@ function getMoonEmoji(phase) {
 }
 
 function updateChart(data) {
-  const hours = data.forecast.forecastday[0].hour;
-  const labels = hours.map(h => h.time.split(" ")[1]);
-  const temps = hours.map(h => h.temp_c);
-  const feels = hours.map(h => h.feelslike_c);
-  const rain = hours.map(h => h.precip_mm);
-
   const light = document.body.classList.contains("light");
   const textColor = light ? "#555" : "#999";
   const gridColor = light ? "rgba(0,0,0,0.07)" : "rgba(255,255,255,0.06)";
   const lineColor = light ? "#222" : "#f0f0f0";
   const feelsColor = light ? "#888" : "#666";
   const barColor = light ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.12)";
+  const barBorderColor = light ? "rgba(0,0,0,0.25)" : "rgba(255,255,255,0.25)";
 
-  if (chart) chart.destroy();
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const forecastDays = data.forecast.forecastday;
 
-  chart = new Chart($("hourlyChart"), {
+  // ----- BAR CHART (left) — daily high/low -----
+  if (barChart) barChart.destroy();
+  const barLabels = forecastDays.map((d, i) => {
+    if (i === 0) return "Today";
+    if (i === 1) return "Tomorrow";
+    return days[new Date(d.date).getDay()];
+  });
+  const highs = forecastDays.map(d => Math.round(d.day.maxtemp_c));
+  const lows = forecastDays.map(d => Math.round(d.day.mintemp_c));
+
+  barChart = new Chart($("barChart"), {
+    type: "bar",
+    data: {
+      labels: barLabels,
+      datasets: [
+        {
+          label: "High °C",
+          data: highs,
+          backgroundColor: barColor,
+          borderColor: barBorderColor,
+          borderWidth: 1,
+          borderRadius: 4,
+          barPercentage: 0.6,
+        },
+        {
+          label: "Low °C",
+          data: lows,
+          backgroundColor: gridColor,
+          borderColor: "transparent",
+          borderRadius: 4,
+          barPercentage: 0.6,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      aspectRatio: 1.6,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: {
+          display: false,
+        },
+        tooltip: {
+          backgroundColor: light ? "#fff" : "#1c1c1c",
+          titleColor: light ? "#111" : "#f0f0f0",
+          bodyColor: light ? "#555" : "#ccc",
+          borderColor: light ? "#d4d4d4" : "#2a2a2a",
+          borderWidth: 1,
+          padding: 10,
+          cornerRadius: 8,
+          displayColors: true,
+        },
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: textColor, font: { size: 10 } },
+        },
+        y: {
+          grid: { color: gridColor, drawBorder: false },
+          ticks: { color: textColor, font: { size: 9 } },
+        },
+      },
+    },
+  });
+
+  // ----- LINE CHART (right) — hourly temp trend -----
+  if (lineChart) lineChart.destroy();
+  const hours = forecastDays[0].hour;
+  const lineLabels = hours.map(h => h.time.split(" ")[1]);
+  const temps = hours.map(h => h.temp_c);
+  const feels = hours.map(h => h.feelslike_c);
+  const rain = hours.map(h => h.precip_mm);
+
+  lineChart = new Chart($("hourlyChart"), {
     type: "line",
     data: {
-      labels,
+      labels: lineLabels,
       datasets: [
         {
           label: "Temp °C",
@@ -315,8 +387,8 @@ function updateChart(data) {
           fill: true,
           order: 1,
           tension: 0.35,
-          pointRadius: 2,
-          pointHoverRadius: 5,
+          pointRadius: 1.5,
+          pointHoverRadius: 4,
           pointBackgroundColor: lineColor,
           borderWidth: 2,
         },
@@ -324,13 +396,13 @@ function updateChart(data) {
           label: "Feels like °C",
           data: feels,
           borderColor: feelsColor,
-          borderDash: [4, 4],
+          borderDash: [3, 3],
           borderWidth: 1.5,
           order: 1,
           fill: false,
           tension: 0.35,
           pointRadius: 0,
-          pointHoverRadius: 4,
+          pointHoverRadius: 3,
         },
         {
           label: "Rain mm",
@@ -347,50 +419,39 @@ function updateChart(data) {
     options: {
       responsive: true,
       maintainAspectRatio: true,
-      aspectRatio: 2.8,
-      interaction: {
-        mode: "index",
-        intersect: false,
-      },
+      aspectRatio: 1.6,
+      interaction: { mode: "index", intersect: false },
       plugins: {
-        legend: {
-          display: false,
-        },
+        legend: { display: false },
         tooltip: {
           backgroundColor: light ? "#fff" : "#1c1c1c",
           titleColor: light ? "#111" : "#f0f0f0",
           bodyColor: light ? "#555" : "#ccc",
           borderColor: light ? "#d4d4d4" : "#2a2a2a",
           borderWidth: 1,
-          padding: 12,
-          cornerRadius: 10,
+          padding: 10,
+          cornerRadius: 8,
           displayColors: true,
-          boxPadding: 4,
         },
       },
       scales: {
         x: {
           grid: { color: gridColor, drawBorder: false },
-          ticks: { color: textColor, maxRotation: 0, font: { size: 10 } },
+          ticks: { color: textColor, maxRotation: 0, font: { size: 9 } },
         },
         y: {
           position: "left",
           grid: { color: gridColor, drawBorder: false },
-          ticks: { color: textColor, font: { size: 10 } },
-          title: { display: false },
+          ticks: { color: textColor, font: { size: 9 } },
         },
         yRain: {
           position: "right",
           grid: { display: false },
-          ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 4 },
-          title: { display: false },
+          ticks: { color: textColor, font: { size: 8 }, maxTicksLimit: 3 },
         },
       },
       animations: {
-        tension: {
-          duration: 800,
-          easing: "easeOutQuad",
-        },
+        tension: { duration: 800, easing: "easeOutQuad" },
       },
     },
   });

@@ -150,14 +150,23 @@
       </div>
     </section>
 
-    <!-- HOURLY CHART -->
-    <section class="section chart-section" id="chartSection">
-      <div class="section-header">
-        <h3>Hourly Forecast</h3>
-        <span class="section-sub" id="chartDate">Today</span>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="hourlyChart"></canvas>
+    <!-- CHARTS ROW -->
+    <section class="section charts-section" id="chartsSection">
+      <div class="charts-row">
+        <div class="chart-col">
+          <div class="section-header">
+            <h3>Daily Comparison</h3>
+            <span class="section-sub">3-day high / low</span>
+          </div>
+          <canvas id="barChart"></canvas>
+        </div>
+        <div class="chart-col">
+          <div class="section-header">
+            <h3>Hourly Trend</h3>
+            <span class="section-sub" id="chartDate">Today</span>
+          </div>
+          <canvas id="hourlyChart"></canvas>
+        </div>
       </div>
     </section>
 
