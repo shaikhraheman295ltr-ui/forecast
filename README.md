@@ -1,6 +1,6 @@
 # Forecast — Weather Intelligence
 
-https://forecast-luffy6.vercel.app
+https://forecast-steel-theta.vercel.app
 
 A monochrome weather dashboard with live global temperature map.
 
